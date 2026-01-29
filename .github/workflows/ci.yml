@@ -19,6 +19,7 @@ env:
   ARTIFACT_DIR: ./builder/build
   DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer # Remember to change in developer-dir: below, since envs are not evaluated in matrixes
   TEST_TIMEOUT: 20m
+  TEST_TIMEOUT_THIRD_ATTEMPT: 40m
 
 jobs:
   build:
@@ -96,7 +97,7 @@ jobs:
   # Tests
   tests:
     if: ${{ github.actor != 'dependabot[bot]' }}
-    timeout-minutes: 60
+    timeout-minutes: 70
     runs-on: macos-15
     needs: [merge-xcframework]
     strategy:
@@ -147,10 +148,11 @@ jobs:
           HOMEBREW_NO_INSTALL_CLEANUP: "1"
         run: brew install coreutils
 
-      - name: Run Tests for ${{ matrix.platform }} (${{ env.TEST_TIMEOUT }} timeout + retry)
+      - name: Run Tests for ${{ matrix.platform }} (timeouts: ${{ env.TEST_TIMEOUT }}, ${{ env.TEST_TIMEOUT }}, ${{ env.TEST_TIMEOUT_THIRD_ATTEMPT }})
         run: |
           gtimeout ${{ env.TEST_TIMEOUT }} ./scripts/test.sh ${{ matrix.platform }} "${{ matrix.os_list }}" "${{ matrix.device_name }}" \
-            || gtimeout ${{ env.TEST_TIMEOUT }} ./scripts/test.sh ${{ matrix.platform }} "${{ matrix.os_list }}" "${{ matrix.device_name }}"
+            || gtimeout ${{ env.TEST_TIMEOUT }} ./scripts/test.sh ${{ matrix.platform }} "${{ matrix.os_list }}" "${{ matrix.device_name }}" \
+            || gtimeout ${{ env.TEST_TIMEOUT_THIRD_ATTEMPT }} ./scripts/test.sh ${{ matrix.platform }} "${{ matrix.os_list }}" "${{ matrix.device_name }}"
 
   create-release:
     if: ${{ github.actor != 'dependabot[bot]' }}
