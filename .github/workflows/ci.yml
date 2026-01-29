@@ -152,7 +152,7 @@ jobs:
           TIMEOUT_MIN=${{ env.TEST_TIMEOUT_MINUTES }}
           gtimeout "${TIMEOUT_MIN}m" ./scripts/test.sh ${{ matrix.platform }} "${{ matrix.os_list }}" "${{ matrix.device_name }}" \
             || gtimeout "${TIMEOUT_MIN}m" ./scripts/test.sh ${{ matrix.platform }} "${{ matrix.os_list }}" "${{ matrix.device_name }}" \
-            || gtimeout "$((TIMEOUT_MIN+20))m" ./scripts/test.sh ${{ matrix.platform }} "${{ matrix.os_list }}" "${{ matrix.device_name }}"
+            || gtimeout "${TIMEOUT_MIN}m" ./scripts/test.sh ${{ matrix.platform }} "${{ matrix.os_list }}" "${{ matrix.device_name }}"
 
   create-release:
     if: ${{ github.actor != 'dependabot[bot]' }}
