@@ -18,8 +18,7 @@ env:
   ARTIFACT_NAME: TDLibFramework.zip
   ARTIFACT_DIR: ./builder/build
   DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer # Remember to change in developer-dir: below, since envs are not evaluated in matrixes
-  TEST_TIMEOUT: 20m
-  TEST_TIMEOUT_THIRD_ATTEMPT: 40m
+  TEST_TIMEOUT_MINUTES: 20
 
 jobs:
   build:
@@ -148,11 +147,12 @@ jobs:
           HOMEBREW_NO_INSTALL_CLEANUP: "1"
         run: brew install coreutils
 
-      - name: Run Tests for ${{ matrix.platform }} (timeouts: ${{ env.TEST_TIMEOUT }}, ${{ env.TEST_TIMEOUT }}, ${{ env.TEST_TIMEOUT_THIRD_ATTEMPT }})
+      - name: Run Tests for ${{ matrix.platform }} (timeout ${{ env.TEST_TIMEOUT_MINUTES }}m; retry x2)
         run: |
-          gtimeout ${{ env.TEST_TIMEOUT }} ./scripts/test.sh ${{ matrix.platform }} "${{ matrix.os_list }}" "${{ matrix.device_name }}" \
-            || gtimeout ${{ env.TEST_TIMEOUT }} ./scripts/test.sh ${{ matrix.platform }} "${{ matrix.os_list }}" "${{ matrix.device_name }}" \
-            || gtimeout ${{ env.TEST_TIMEOUT_THIRD_ATTEMPT }} ./scripts/test.sh ${{ matrix.platform }} "${{ matrix.os_list }}" "${{ matrix.device_name }}"
+          TIMEOUT_MIN=${{ env.TEST_TIMEOUT_MINUTES }}
+          gtimeout "${TIMEOUT_MIN}m" ./scripts/test.sh ${{ matrix.platform }} "${{ matrix.os_list }}" "${{ matrix.device_name }}" \
+            || gtimeout "${TIMEOUT_MIN}m" ./scripts/test.sh ${{ matrix.platform }} "${{ matrix.os_list }}" "${{ matrix.device_name }}" \
+            || gtimeout "$((TIMEOUT_MIN+20))m" ./scripts/test.sh ${{ matrix.platform }} "${{ matrix.os_list }}" "${{ matrix.device_name }}"
 
   create-release:
     if: ${{ github.actor != 'dependabot[bot]' }}
